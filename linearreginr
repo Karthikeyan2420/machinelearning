@@ -1,0 +1,53 @@
+# Load the iris dataset
+data <- iris
+
+# Explore the iris dataset to understand the structure
+head(data)
+
+# Define the variables for the model
+Years_Exp <- data$Sepal.Width
+Salary <- data$Sepal.Length
+
+# Create the data frame with selected variables
+data <- data.frame(Years_Exp, Salary)
+
+# Plot the data to visualize the relationship
+plot(data$Years_Exp, data$Salary,
+     xlab = "Sepal Width",
+     ylab = "Sepal Length",
+     main = "Scatter Plot of Sepal Width vs Sepal Length")
+
+# Split the data into training and test sets
+library(caTools)
+set.seed(123) # For reproducibility
+split <- sample.split(data$Salary, SplitRatio = 0.7)
+trainingset <- subset(data, split == TRUE)
+testset <- subset(data, split == FALSE)
+
+# Fitting Simple Linear Regression to the Training set
+lm.r <- lm(formula = Salary ~ Years_Exp, data = trainingset)
+
+# Summary of the model
+summary(lm.r)
+
+# Predicting new data points (example data points for illustration)
+new_data <- data.frame(Years_Exp = c(3.0, 3.5, 4.0))
+predicted_salaries <- predict(lm.r, newdata = new_data)
+predicted_salaries
+
+# Visualising the Training set results
+library(ggplot2)
+ggplot() +
+  geom_point(aes(x = trainingset$Years_Exp, y = trainingset$Salary), colour = 'red') +
+  geom_line(aes(x = trainingset$Years_Exp, y = predict(lm.r, newdata = trainingset)), colour = 'blue') +
+  ggtitle('Sepal Length vs Sepal Width (Training set)') +
+  xlab('Sepal Width') +
+  ylab('Sepal Length')
+
+# Visualising the Test set results
+ggplot() +
+  geom_point(aes(x = testset$Years_Exp, y = testset$Salary), colour = 'red') +
+  geom_line(aes(x = trainingset$Years_Exp, y = predict(lm.r, newdata = trainingset)), colour = 'blue') +
+  ggtitle('Sepal Length vs Sepal Width (Test set)') +
+  xlab('Sepal Width') +
+  ylab('Sepal Length')
