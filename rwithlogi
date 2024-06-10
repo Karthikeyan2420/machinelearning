@@ -1,0 +1,51 @@
+
+library(dplyr)
+library(caTools)
+library(ROCR)
+
+# Load and inspect the iris dataset
+data(iris)
+head(iris)
+
+# Binarize the Sepal.Length variable
+iris$Sepal.Length <- ifelse(iris$Sepal.Length > 5, 1, 0)
+
+# Split the data into training and testing sets
+set.seed(123)  # Setting seed for reproducibility
+split <- sample.split(iris$Sepal.Length, SplitRatio = 0.8)
+
+train_reg <- subset(iris, split == TRUE)
+test_reg <- subset(iris, split == FALSE)
+
+# Train the logistic regression model
+logistic_model <- glm(Sepal.Length ~ Sepal.Width, data = train_reg, family = "binomial")
+summary(logistic_model)
+
+# Predict on the test set
+predict_reg <- predict(logistic_model, test_reg, type = "response")
+
+# Binarize the predictions
+predict_reg <- ifelse(predict_reg > 0.5, 1, 0)
+
+# Evaluate the model performance
+confusion_matrix <- table(test_reg$Sepal.Length, predict_reg)
+print(confusion_matrix)
+
+# Calculate the accuracy
+missing_classerr <- mean(predict_reg != test_reg$Sepal.Length)
+accuracy <- 1 - missing_classerr
+print(paste("Accuracy =", accuracy))
+
+# Generate ROC and AUC
+ROCPred <- prediction(predict_reg, test_reg$Sepal.Length)
+ROCPer <- performance(ROCPred, measure = "tpr", x.measure = "fpr")
+auc <- performance(ROCPred, measure = "auc")
+auc_value <- auc@y.values[[1]]
+
+# Plot the ROC curve
+plot(ROCPer, col = "blue", main = "ROC Curve")
+abline(a = 0, b = 1, lty = 2, col = "red")
+legend("bottomright", legend = paste("AUC =", round(auc_value, 4)), col = "blue", lwd = 2)
+
+# Print AUC value
+print(paste("AUC =", round(auc_value, 4)))
